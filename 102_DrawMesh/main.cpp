@@ -28,22 +28,6 @@ int main(int argc, char * argv[])
     colors.emplace(viewer.data().id, 0.5*Eigen::RowVector3d::Random().array() + 0.5);
   }
 
-  viewer.callback_key_down =
-    [&](igl::opengl::glfw::Viewer &, unsigned int key, int mod)
-  {
-    if(key == GLFW_KEY_BACKSPACE)
-    {
-      int old_id = viewer.data().id;
-      if (viewer.erase_mesh(viewer.selected_data_index))
-      {
-        colors.erase(old_id);
-        last_selected = -1;
-      }
-      return true;
-    }
-    return false;
-  };
-
   // Refresh selected mesh colors
   viewer.callback_pre_draw =
     [&](igl::opengl::glfw::Viewer &)
