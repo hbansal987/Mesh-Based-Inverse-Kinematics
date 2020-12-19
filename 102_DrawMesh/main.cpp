@@ -257,6 +257,8 @@ int main(int argc, char * argv[])
   Eigen::MatrixXd Jacobian_Tj; 
 
   Eigen::MatrixXd Mw(9*number_of_triangles,1);
+  Eigen::MatrixXd Mw_jacobian(9*number_of_triangles,1);
+  int wk = 1;
 
   int count=0;
   
@@ -327,17 +329,25 @@ int main(int argc, char * argv[])
   	S2j = svd2.matrixV()*svd2.singularValues().asDiagonal()*svd2.matrixV().transpose();
 
   	//Eigen::MatrixXd wi();
-
-  	Tj = ((R1j.log()+R2j.log()).exp()) *(S1j+S2j);
+  	
+  	Tj = ((wk*R1j.log()+wk*R2j.log()).exp()) *(wk*S1j+wk*S2j);
 
   	Jacobian_Tj = (R1j.log()+R2j.log()).exp()*R1j.log()*(S1j+S2j) + (R1j.log()+R2j.log()).exp()*S1j;
 
   	for(int r=0;r<3;r++){
-  		Mw(count,0) = Jacobian_Tj(r,0);
-  		Mw(count+1,0) = Jacobian_Tj(r,1);
-  		Mw(count+2,0) = Jacobian_Tj(r,2);
+  		Mw(count,0) = Tj(r,0);
+  		Mw(count+1,0) = Tj(r,1);
+  		Mw(count+2,0) = Tj(r,2);
   		count = count+3;
   	}
+
+  	for(int r=0;r<3;r++){
+  		Mw_jacobian(count,0) = Jacobian_Tj(r,0);
+  		Mw_jacobian(count+1,0) = Jacobian_Tj(r,1);
+  		Mw_jacobian(count+2,0) = Jacobian_Tj(r,2);
+  		count = count+3;
+  	}
+  
   }
 
 
@@ -348,7 +358,21 @@ int main(int argc, char * argv[])
   //std::cout<<Tj<<std::endl;
   //std::cout<<Mw<<std::endl;
 
+  /////////////// Gauss Newton Algorithm //////////////////////
 
+  //Stopping conditions:
+
+  int deltaK = 1;
+  wk = wk + deltaK;
+
+  Eigen::MatrixXd A_matrix(9*number_of_triangles,3*number_of_vertices);
+  A_matrix.block(3*number_of_triangles,number_of_vertices,0,0) = G_matrix;
+  A_matrix.block(3*number_of_triangles,number_of_vertices,3*number_of_triangles,number_of_vertices) = G_matrix;
+  A_matrix.block(3*number_of_triangles,number_of_vertices,2*3*number_of_triangles,2*number_of_vertices) = G_matrix;
+
+  A_matrix.block(9*number_of_triangles,1,3*number_of_vertices,0) = Mw_jacobian;
+
+  //std::cout<<A<<std::endl;
 
 
 
